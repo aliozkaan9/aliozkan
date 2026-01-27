@@ -1,0 +1,5 @@
+Flask==3.1.2
+SQLAlchemy==2.0.46
+Flask-Login==0.6.3
+Flask-Bcrypt==1.0.1
+pymodbus==3.11.4
