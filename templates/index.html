@@ -16,10 +16,14 @@
 <body class="bg-light">
     <nav class="navbar navbar-dark bg-dark mb-4">
         <div class="container-fluid">
-            <span class="navbar-brand mb-0 h1">🏭 Cable Factory MES v2.0</span>
-            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newOrderModal">
-                + New Work Order
-            </button>
+            <span class="navbar-brand mb-0 h1">🏭 Cable MES <small class="text-muted" style="font-size:0.8rem">Operator Panel</small></span>
+            <div>
+                <span class="text-white me-3">Op: {{ current_user.full_name }}</span>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newOrderModal">
+                    + New Work Order
+                </button>
+                <a href="/logout" class="btn btn-outline-light btn-sm ms-2">Logout</a>
+            </div>
         </div>
     </nav>
 

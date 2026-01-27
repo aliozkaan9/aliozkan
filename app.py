@@ -1,20 +1,86 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from cable_mes.database import db_session
-from cable_mes.models import WorkOrder, Machine, Telemetry, QualityAlert, Product
+from cable_mes.models import WorkOrder, Machine, Telemetry, QualityAlert, Product, User, UserRole
 from cable_mes.services import MESService
-from datetime import datetime
+from cable_mes.plc import plc_collector # Import PLC module
+from flask_bcrypt import Bcrypt
+import datetime
 
 app = Flask(__name__)
+app.secret_key = 'super_secret_enterprise_key'
+
+# Auth Setup
+bcrypt = Bcrypt(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     db_session.remove()
 
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# --- Auth Routes ---
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+
+        if user and bcrypt.check_password_hash(user.password_hash, password):
+            login_user(user)
+            if user.role == UserRole.ADMIN:
+                return redirect(url_for('admin_dashboard'))
+            else:
+                return redirect(url_for('operator_dashboard'))
+        else:
+            flash('Invalid credentials')
+
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+# --- Admin Routes ---
+@app.route('/admin')
+@login_required
+def admin_dashboard():
+    if current_user.role != UserRole.ADMIN:
+        return "Access Denied", 403
+
+    machines = Machine.query.all()
+    # Get active WO for each machine for display
+    active_wos = {}
+    for m in machines:
+        wo = WorkOrder.query.filter_by(machine_id=m.id, status='IN_PROGRESS').first()
+        if wo: active_wos[m.id] = wo
+
+    return render_template('admin_dashboard.html',
+                           machines=machines,
+                           work_orders=active_wos,
+                           active_wo_count=len(active_wos))
+
+# --- Operator Routes ---
 @app.route('/')
-def index():
+def root():
+    return redirect(url_for('login'))
+
+@app.route('/operator')
+@login_required
+def operator_dashboard():
     machines = Machine.query.all()
     products = Product.query.all()
-    return render_template('index.html', machines=machines, products=products)
+    return render_template('index.html', machines=machines, products=products) # Re-using the nice dashboard
+
+# --- API Routes (Updated for PLC) ---
 
 @app.route('/api/products')
 def get_products():
@@ -25,7 +91,6 @@ def get_products():
 def create_work_order():
     data = request.json
     try:
-        # Basic validation
         if not all(k in data for k in ('order_number', 'product_code', 'machine_id', 'target_length')):
             return jsonify({'error': 'Missing fields'}), 400
 
@@ -40,28 +105,20 @@ def create_work_order():
             target_length=float(data['target_length'])
         )
         return jsonify({'message': 'Work Order Created', 'id': wo.id}), 201
-    except ValueError as e:
-        return jsonify({'error': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}), 400
 
 @app.route('/api/work-order/<int:wo_id>/start', methods=['POST'])
 def start_work_order_api(wo_id):
     wo = WorkOrder.query.get(wo_id)
-    if not wo:
-        return jsonify({'error': 'Work Order not found'}), 404
-
-    if MESService.start_work_order(wo.order_number):
+    if wo and MESService.start_work_order(wo.order_number):
         return jsonify({'message': 'Started'})
     return jsonify({'error': 'Could not start'}), 400
 
 @app.route('/api/work-order/<int:wo_id>/stop', methods=['POST'])
 def stop_work_order_api(wo_id):
     wo = WorkOrder.query.get(wo_id)
-    if not wo:
-        return jsonify({'error': 'Work Order not found'}), 404
-
-    if MESService.stop_work_order(wo.order_number):
+    if wo and MESService.stop_work_order(wo.order_number):
         return jsonify({'message': 'Stopped'})
     return jsonify({'error': 'Could not stop'}), 400
 
@@ -71,13 +128,14 @@ def machine_status(machine_id):
     if not machine:
         return jsonify({'error': 'Machine not found'}), 404
 
-    # Get active work order
-    wo = WorkOrder.query.filter_by(machine_id=machine_id, status='IN_PROGRESS').first()
+    # 1. Get Live Data from PLC Module
+    # This now attempts real Modbus connection!
+    plc_data = plc_collector.read_machine_data(machine)
 
-    # If no active WO, check for planned WO
-    planned_wo = None
-    if not wo:
-        planned_wo = WorkOrder.query.filter_by(machine_id=machine_id, status='PLANNED').first()
+    # ... (Rest of the logic similar to before, but using plc_data)
+
+    wo = WorkOrder.query.filter_by(machine_id=machine_id, status='IN_PROGRESS').first()
+    planned_wo = WorkOrder.query.filter_by(machine_id=machine_id, status='PLANNED').first() if not wo else None
 
     data = {
         'name': machine.name,
@@ -87,63 +145,55 @@ def machine_status(machine_id):
         'product': '-',
         'target_length': 0,
         'produced_length': 0,
-        'speed': 0,
-        'temperature': 0,
-        'diameter': 0,
+        'speed': plc_data['speed'],       # From PLC
+        'temperature': plc_data['temp'],  # From PLC
+        'diameter': plc_data['diam'],     # From PLC
         'oee': 0,
         'alerts': []
     }
 
-    # Fill data for Planned WO (if no active WO)
     if planned_wo and not wo:
         data['wo_id'] = planned_wo.id
         data['wo_number'] = planned_wo.order_number
         data['product'] = planned_wo.product.code
         data['target_length'] = planned_wo.target_length_m
-        data['status'] = 'READY' # Custom status for UI
+        data['status'] = 'READY'
 
     if wo:
         data['wo_id'] = wo.id
         data['wo_number'] = wo.order_number
         data['product'] = wo.product.code
         data['target_length'] = wo.target_length_m
+
+        # In a real loop, we would save PLC data to DB here or in a background task.
+        # For this request-response cycle, we'll just save it now to keep history updated
+        # ONLY if machine is running
+        if machine.status == 'RUNNING':
+             MESService.process_telemetry(wo.order_number, plc_data['speed'], plc_data['temp'], plc_data['diam'])
+             # Refresh from DB to get updated produced length
+             db_session.refresh(wo)
+
         data['produced_length'] = round(wo.produced_length_m, 1)
+        data['oee'] = round(MESService.get_oee(machine.name), 1)
 
-        # Get latest telemetry
-        last_tel = Telemetry.query.filter_by(work_order_id=wo.id)\
-            .order_by(Telemetry.timestamp.desc()).first()
-
-        if last_tel:
-            data['speed'] = last_tel.line_speed_m_min
-            data['temperature'] = last_tel.temperature_c
-            data['diameter'] = last_tel.diameter_mm
-
-        # Get active alerts (last 5)
+        # Alerts
         alerts = QualityAlert.query.filter_by(work_order_id=wo.id)\
             .order_by(QualityAlert.timestamp.desc()).limit(5).all()
-
         data['alerts'] = [{'time': a.timestamp.strftime('%H:%M:%S'), 'msg': a.description} for a in alerts]
-
-        # Calculate OEE
-        data['oee'] = round(MESService.get_oee(machine.name), 1)
 
     return jsonify(data)
 
 @app.route('/api/machine/<int:machine_id>/history')
 def machine_history(machine_id):
-    # Returns last 60 seconds of telemetry for charts
     machine = Machine.query.get(machine_id)
-    if not machine:
-        return jsonify({'error': 'Machine not found'}), 404
+    if not machine: return jsonify([]), 404
 
     wo = WorkOrder.query.filter_by(machine_id=machine_id, status='IN_PROGRESS').first()
-    if not wo:
-        return jsonify([])
+    if not wo: return jsonify([])
 
     telemetry = Telemetry.query.filter_by(work_order_id=wo.id)\
         .order_by(Telemetry.timestamp.desc()).limit(30).all()
 
-    # Reverse to show oldest first in chart
     data = []
     for t in reversed(telemetry):
         data.append({
@@ -152,7 +202,6 @@ def machine_history(machine_id):
             'temp': t.temperature_c,
             'diam': t.diameter_mm
         })
-
     return jsonify(data)
 
 if __name__ == '__main__':
