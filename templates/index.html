@@ -5,23 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cable MES Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .metric-card {
-            border-left: 5px solid #007bff;
-        }
-        .metric-value {
-            font-size: 2rem;
-            font-weight: bold;
-        }
-        .alert-card {
-            border-left: 5px solid #dc3545;
-        }
+        .metric-card { border-left: 5px solid #007bff; }
+        .metric-value { font-size: 2rem; font-weight: bold; }
+        .alert-card { border-left: 5px solid #dc3545; }
+        canvas { max-height: 150px; }
     </style>
 </head>
 <body class="bg-light">
     <nav class="navbar navbar-dark bg-dark mb-4">
         <div class="container-fluid">
-            <span class="navbar-brand mb-0 h1">🏭 Cable Factory MES</span>
+            <span class="navbar-brand mb-0 h1">🏭 Cable Factory MES v2.0</span>
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newOrderModal">
+                + New Work Order
+            </button>
         </div>
     </nav>
 
@@ -32,55 +30,78 @@
                 <div class="card shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">{{ machine.name }} ({{ machine.type }})</h5>
-                        <span class="badge bg-secondary status-badge">LOADING...</span>
+                        <div>
+                            <span class="badge bg-secondary status-badge me-2">LOADING...</span>
+                            <button class="btn btn-success btn-sm btn-start d-none" onclick="startOrder({{ machine.id }})">START</button>
+                            <button class="btn btn-danger btn-sm btn-stop d-none" onclick="stopOrder({{ machine.id }})">STOP</button>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <!-- Order Info -->
                             <div class="col-md-3 border-end">
-                                <h6 class="text-muted">Active Order</h6>
+                                <h6 class="text-muted">Production Info</h6>
                                 <p class="mb-1"><strong>WO:</strong> <span class="wo-number">-</span></p>
                                 <p class="mb-1"><strong>Product:</strong> <span class="product-code">-</span></p>
                                 <div class="progress mt-2" style="height: 10px;">
                                     <div class="progress-bar" role="progressbar" style="width: 0%"></div>
                                 </div>
                                 <small class="text-muted"><span class="produced">0</span> / <span class="target">0</span> m</small>
-                            </div>
 
-                            <!-- Live Telemetry -->
-                            <div class="col-md-6">
-                                <div class="row text-center">
-                                    <div class="col-4">
-                                        <div class="card p-2 metric-card border-primary">
-                                            <small>Speed</small>
-                                            <div class="metric-value text-primary"><span class="speed">0</span></div>
-                                            <small>m/min</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="card p-2 metric-card border-warning">
-                                            <small>Temp</small>
-                                            <div class="metric-value text-warning"><span class="temp">0</span></div>
-                                            <small>°C</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="card p-2 metric-card border-info">
-                                            <small>Diameter</small>
-                                            <div class="metric-value text-info"><span class="diam">0</span></div>
-                                            <small>mm</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- OEE & Alerts -->
-                            <div class="col-md-3 border-start">
-                                <div class="text-center mb-3">
+                                <div class="mt-3 text-center">
                                     <h6 class="text-muted">OEE</h6>
                                     <h2 class="text-success"><span class="oee">0</span>%</h2>
                                 </div>
-                                <div class="alert-list small overflow-auto" style="max-height: 100px;">
+                            </div>
+
+                            <!-- Live Telemetry & Charts -->
+                            <div class="col-md-6">
+                                <ul class="nav nav-tabs" id="myTab{{ machine.id }}" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="metrics-tab-{{ machine.id }}" data-bs-toggle="tab" data-bs-target="#metrics-{{ machine.id }}" type="button" role="tab">Metrics</button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="charts-tab-{{ machine.id }}" data-bs-toggle="tab" data-bs-target="#charts-{{ machine.id }}" type="button" role="tab">Charts</button>
+                                    </li>
+                                </ul>
+                                <div class="tab-content pt-3" id="myTabContent{{ machine.id }}">
+                                    <!-- Metrics View -->
+                                    <div class="tab-pane fade show active" id="metrics-{{ machine.id }}" role="tabpanel">
+                                        <div class="row text-center">
+                                            <div class="col-4">
+                                                <div class="card p-2 metric-card border-primary">
+                                                    <small>Speed</small>
+                                                    <div class="metric-value text-primary"><span class="speed">0</span></div>
+                                                    <small>m/min</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="card p-2 metric-card border-warning">
+                                                    <small>Temp</small>
+                                                    <div class="metric-value text-warning"><span class="temp">0</span></div>
+                                                    <small>°C</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="card p-2 metric-card border-info">
+                                                    <small>Diameter</small>
+                                                    <div class="metric-value text-info"><span class="diam">0</span></div>
+                                                    <small>mm</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Charts View -->
+                                    <div class="tab-pane fade" id="charts-{{ machine.id }}" role="tabpanel">
+                                        <canvas id="chart-{{ machine.id }}"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Alerts -->
+                            <div class="col-md-3 border-start">
+                                <h6 class="text-muted">Quality Alerts</h6>
+                                <div class="alert-list small overflow-auto" style="max-height: 200px;">
                                     <!-- Alerts go here -->
                                 </div>
                             </div>
@@ -92,25 +113,114 @@
         </div>
     </div>
 
+    <!-- New Order Modal -->
+    <div class="modal fade" id="newOrderModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Work Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createOrderForm">
+                        <div class="mb-3">
+                            <label class="form-label">Order Number</label>
+                            <input type="text" class="form-control" name="order_number" required placeholder="WO-XXXX">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Product</label>
+                            <select class="form-select" name="product_code" required>
+                                {% for product in products %}
+                                <option value="{{ product.code }}">{{ product.name }} ({{ product.code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Machine</label>
+                            <select class="form-select" name="machine_id" required>
+                                {% for machine in machines %}
+                                <option value="{{ machine.id }}">{{ machine.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Target Length (m)</label>
+                            <input type="number" class="form-control" name="target_length" value="1000" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Create Order</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        const charts = {};
+        let activeWorkOrders = {}; // Store WO IDs per machine
+
+        // Initialize Charts
+        document.querySelectorAll('canvas').forEach(canvas => {
+            const ctx = canvas.getContext('2d');
+            charts[canvas.id] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Diam (mm)', data: [], borderColor: '#17a2b8', tension: 0.1, yAxisID: 'y' },
+                        { label: 'Temp (C)', data: [], borderColor: '#ffc107', tension: 0.1, yAxisID: 'y1' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    scales: {
+                        y: { type: 'linear', display: true, position: 'left', title: {display: true, text: 'mm'} },
+                        y1: { type: 'linear', display: true, position: 'right', grid: {drawOnChartArea: false}, title: {display: true, text: '°C'} }
+                    }
+                }
+            });
+        });
+
         function updateDashboard() {
             document.querySelectorAll('.machine-card').forEach(card => {
                 const id = card.getAttribute('data-id');
                 fetch(`/api/machine/${id}`)
                     .then(response => response.json())
                     .then(data => {
-                        // Update Status
+                        activeWorkOrders[id] = data.wo_id; // Store WO ID
+
+                        // Update Status Badge
                         const badge = card.querySelector('.status-badge');
                         badge.textContent = data.status;
-                        badge.className = `badge status-badge ${data.status === 'RUNNING' ? 'bg-success' : 'bg-secondary'}`;
+                        badge.className = `badge status-badge me-2 ${
+                            data.status === 'RUNNING' ? 'bg-success' :
+                            data.status === 'READY' ? 'bg-info' : 'bg-secondary'
+                        }`;
 
-                        // Update WO Info
+                        // Buttons Logic
+                        const btnStart = card.querySelector('.btn-start');
+                        const btnStop = card.querySelector('.btn-stop');
+
+                        if (data.status === 'READY') {
+                            btnStart.classList.remove('d-none');
+                            btnStop.classList.add('d-none');
+                        } else if (data.status === 'RUNNING') {
+                            btnStart.classList.add('d-none');
+                            btnStop.classList.remove('d-none');
+                        } else {
+                            btnStart.classList.add('d-none');
+                            btnStop.classList.add('d-none');
+                        }
+
+                        // Update Info
                         card.querySelector('.wo-number').textContent = data.wo_number;
                         card.querySelector('.product-code').textContent = data.product;
                         card.querySelector('.produced').textContent = data.produced_length;
                         card.querySelector('.target').textContent = data.target_length;
 
-                        // Progress Bar
+                        // Progress
                         if (data.target_length > 0) {
                             const pct = (data.produced_length / data.target_length) * 100;
                             card.querySelector('.progress-bar').style.width = pct + '%';
@@ -122,8 +232,6 @@
                         card.querySelector('.speed').textContent = data.speed;
                         card.querySelector('.temp').textContent = data.temperature;
                         card.querySelector('.diam').textContent = data.diameter;
-
-                        // OEE
                         card.querySelector('.oee').textContent = data.oee;
 
                         // Alerts
@@ -131,13 +239,78 @@
                         alertList.innerHTML = '';
                         data.alerts.forEach(alert => {
                             const div = document.createElement('div');
-                            div.className = 'text-danger mb-1';
-                            div.innerHTML = `<strong>${alert.time}</strong> ${alert.msg}`;
+                            div.className = 'alert alert-danger py-1 px-2 mb-1';
+                            div.innerHTML = `<small><strong>${alert.time}</strong> ${alert.msg}</small>`;
                             alertList.appendChild(div);
                         });
+
+                        // Update Chart if tab is active
+                        if (data.status === 'RUNNING') {
+                            updateChart(id);
+                        }
                     });
             });
         }
+
+        function updateChart(machineId) {
+            fetch(`/api/machine/${machineId}/history`)
+                .then(res => res.json())
+                .then(history => {
+                    const chart = charts[`chart-${machineId}`];
+                    chart.data.labels = history.map(h => h.time);
+                    chart.data.datasets[0].data = history.map(h => h.diam);
+                    chart.data.datasets[1].data = history.map(h => h.temp);
+                    chart.update();
+                });
+        }
+
+        function startOrder(machineId) {
+            const woId = activeWorkOrders[machineId];
+            if(!woId) return;
+            fetch(`/api/work-order/${woId}/start`, { method: 'POST' })
+                .then(res => {
+                     if(res.ok) updateDashboard();
+                     else alert("Failed to start");
+                });
+        }
+
+        function stopOrder(machineId) {
+            const woId = activeWorkOrders[machineId];
+            if(!woId) return;
+            if(!confirm("Stop current production?")) return;
+            fetch(`/api/work-order/${woId}/stop`, { method: 'POST' })
+                .then(res => {
+                     if(res.ok) updateDashboard();
+                     else alert("Failed to stop");
+                });
+        }
+
+        // Handle New Order Form
+        document.getElementById('createOrderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch('/api/work-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(result => {
+                if(result.error) {
+                    alert('Error: ' + result.error);
+                } else {
+                    alert('Work Order Created!');
+                    // Close modal (need bootstrap instance)
+                    const modalEl = document.getElementById('newOrderModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+                    e.target.reset();
+                    updateDashboard();
+                }
+            });
+        });
 
         setInterval(updateDashboard, 1000);
         updateDashboard();
