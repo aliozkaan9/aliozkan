@@ -68,6 +68,100 @@ def admin_dashboard():
                            work_orders=active_wos,
                            active_wo_count=len(active_wos))
 
+@app.route('/admin/reports')
+@login_required
+def admin_reports():
+    if current_user.role != UserRole.ADMIN: return "Access Denied", 403
+    # Show all orders, newest first
+    work_orders = WorkOrder.query.order_by(WorkOrder.id.desc()).all()
+    return render_template('reports.html', work_orders=work_orders)
+
+@app.route('/admin/reports/export')
+@login_required
+def export_reports():
+    if current_user.role != UserRole.ADMIN: return "Access Denied", 403
+    import csv
+    from io import StringIO
+    from flask import Response
+
+    si = StringIO()
+    cw = csv.writer(si)
+    cw.writerow(['Order Number', 'Product', 'Machine', 'Start Time', 'End Time', 'Target (m)', 'Produced (m)', 'Status'])
+
+    orders = WorkOrder.query.all()
+    for wo in orders:
+        cw.writerow([
+            wo.order_number,
+            wo.product.code,
+            wo.machine.name,
+            wo.start_time,
+            wo.end_time,
+            wo.target_length_m,
+            wo.produced_length_m,
+            wo.status
+        ])
+
+    output = Response(si.getvalue(), mimetype='text/csv')
+    output.headers["Content-Disposition"] = "attachment; filename=production_report.csv"
+    return output
+
+@app.route('/admin/machines')
+@login_required
+def admin_machines():
+    if current_user.role != UserRole.ADMIN: return "Access Denied", 403
+    machines = Machine.query.all()
+    return render_template('machines.html', machines=machines)
+
+@app.route('/admin/machines/add', methods=['POST'])
+@login_required
+def add_machine():
+    if current_user.role != UserRole.ADMIN: return "Access Denied", 403
+
+    name = request.form['name']
+    m_type = request.form['type']
+    plc_ip = request.form.get('plc_ip')
+    plc_port = request.form.get('plc_port', 502)
+
+    # Defaults for registers
+    new_machine = Machine(
+        name=name,
+        type=m_type,
+        plc_ip=plc_ip if plc_ip else None,
+        plc_port=int(plc_port),
+        reg_speed=40001,
+        reg_temp=40002,
+        reg_diameter=40003
+    )
+    db_session.add(new_machine)
+    db_session.commit()
+    return redirect(url_for('admin_machines'))
+
+@app.route('/admin/users')
+@login_required
+def admin_users():
+    if current_user.role != UserRole.ADMIN: return "Access Denied", 403
+    users = User.query.all()
+    return render_template('users.html', users=users)
+
+@app.route('/admin/users/add', methods=['POST'])
+@login_required
+def add_user():
+    if current_user.role != UserRole.ADMIN: return "Access Denied", 403
+
+    username = request.form['username']
+    password = request.form['password']
+    full_name = request.form['full_name']
+    role_str = request.form['role']
+
+    role = UserRole.ADMIN if role_str == 'admin' else UserRole.OPERATOR
+    hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
+
+    new_user = User(username=username, password_hash=hashed_pw, full_name=full_name, role=role)
+    db_session.add(new_user)
+    db_session.commit()
+
+    return redirect(url_for('admin_users'))
+
 # --- Operator Routes ---
 @app.route('/')
 def root():
