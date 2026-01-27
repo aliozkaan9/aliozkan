@@ -93,31 +93,51 @@ class MESService:
     @staticmethod
     def get_oee(machine_name):
         # Simplified OEE calculation
-        # Availability: (Planned Time - Down Time) / Planned Time
-        # Performance: (Actual Speed / Target Speed)
-        # Quality: (Good Product / Total Product)
-        # For this demo, we will just return a mock or simple calculation based on current WO
+        bd = MESService.get_oee_breakdown(machine_name)
+        return bd['oee']
 
+    @staticmethod
+    def get_oee_breakdown(machine_name):
         machine = Machine.query.filter_by(name=machine_name).first()
         if not machine:
-            return 0.0
+            return {'availability': 0, 'performance': 0, 'quality': 0, 'oee': 0}
 
+        # Simplified Logic for Demo
+        # 1. Availability (Mocked based on status)
+        availability = 1.0 if machine.status == 'RUNNING' else 0.95
+
+        # 2. Performance
+        performance = 0.0
         current_wo = WorkOrder.query.filter_by(machine_id=machine.id, status='IN_PROGRESS').first()
-        if not current_wo:
-            return 0.0
+        if current_wo:
+            last_telemetry = Telemetry.query.filter_by(work_order_id=current_wo.id)\
+                .order_by(Telemetry.timestamp.desc()).limit(20).all()
+            if last_telemetry:
+                avg_speed = sum(t.line_speed_m_min for t in last_telemetry) / len(last_telemetry)
+                target_speed = current_wo.product.target_speed_m_min
+                performance = avg_speed / target_speed if target_speed > 0 else 0
 
-        # Simple Performance Ratio
-        # Average speed of last 10 telemetry points
-        last_telemetry = Telemetry.query.filter_by(work_order_id=current_wo.id)\
-            .order_by(Telemetry.timestamp.desc()).limit(10).all()
+        # 3. Quality
+        # Check alerts count vs total produced length (Rough approximation)
+        quality = 1.0
+        if current_wo and current_wo.produced_length_m > 0:
+            alerts_count = QualityAlert.query.filter_by(work_order_id=current_wo.id).count()
+            # Assume each alert ruins 100m of cable
+            bad_product = alerts_count * 100
+            total_product = current_wo.produced_length_m
+            if total_product > 0:
+                quality = max(0, (total_product - bad_product) / total_product)
 
-        if not last_telemetry:
-            return 0.0
+        # Cap values
+        availability = min(availability, 1.0)
+        performance = min(performance, 1.0)
+        quality = min(quality, 1.0)
 
-        avg_speed = sum(t.line_speed_m_min for t in last_telemetry) / len(last_telemetry)
-        target_speed = current_wo.product.target_speed_m_min
+        oee = availability * performance * quality
 
-        performance = avg_speed / target_speed if target_speed > 0 else 0
-
-        # Cap at 100% for simple demo
-        return min(performance * 100, 100.0)
+        return {
+            'availability': round(availability * 100, 1),
+            'performance': round(performance * 100, 1),
+            'quality': round(quality * 100, 1),
+            'oee': round(oee * 100, 1)
+        }

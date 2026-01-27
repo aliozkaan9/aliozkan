@@ -1,44 +1,73 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Machine & PLC Management</h2>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMachineModal">
-        <i class="fas fa-plus me-2"></i> Add Machine
-    </button>
-</div>
+{% block header %}Machine Management{% endblock %}
 
-<div class="card">
-    <div class="card-body">
-        <table class="table table-striped align-middle">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>PLC IP</th>
-                    <th>Port</th>
-                    <th>Registers (S/T/D)</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for m in machines %}
-                <tr>
-                    <td>{{ m.name }}</td>
-                    <td>{{ m.type }}</td>
-                    <td>{{ m.plc_ip or 'Simulated' }}</td>
-                    <td>{{ m.plc_port }}</td>
-                    <td>{{ m.reg_speed }} / {{ m.reg_temp }} / {{ m.reg_diameter }}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary"
-                                onclick="editMachine({{ m.id }}, '{{ m.name }}', '{{ m.plc_ip }}')">
-                            Edit
-                        </button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0">Connected Machines</h5>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMachineModal">
+                    <i class="fas fa-plus me-2"></i> Add Machine
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Machine Name</th>
+                            <th>Connection Type</th>
+                            <th>PLC IP Address</th>
+                            <th>Port</th>
+                            <th>Registers (S/T/D)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in machines %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width:40px; height:40px;">
+                                        <i class="fas fa-hdd text-secondary"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ m.name }}</div>
+                                        <small class="text-muted">{{ m.type }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if m.plc_ip %}
+                                    <span class="badge bg-success bg-opacity-10 text-success"><i class="fas fa-network-wired"></i> Modbus TCP</span>
+                                {% else %}
+                                    <span class="badge bg-warning bg-opacity-10 text-warning"><i class="fas fa-laptop-code"></i> Simulation</span>
+                                {% endif %}
+                            </td>
+                            <td><code class="text-primary">{{ m.plc_ip or 'Localhost' }}</code></td>
+                            <td>{{ m.plc_port }}</td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ m.reg_speed }}</span>
+                                <span class="badge bg-light text-dark border">{{ m.reg_temp }}</span>
+                                <span class="badge bg-light text-dark border">{{ m.reg_diameter }}</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-light text-primary"
+                                        onclick="editMachine({{ m.id }}, '{{ m.name }}', '{{ m.plc_ip }}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-light text-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -46,38 +75,41 @@
 <div class="modal fade" id="addMachineModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Machine</h5>
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Add New Machine</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form action="{{ url_for('add_machine') }}" method="POST">
                     <div class="mb-3">
-                        <label>Machine Name</label>
-                        <input type="text" name="name" class="form-control" required>
+                        <label class="form-label small text-muted text-uppercase fw-bold">Machine Name</label>
+                        <input type="text" name="name" class="form-control" required placeholder="e.g. EXT-03">
                     </div>
                     <div class="mb-3">
-                        <label>Type</label>
+                        <label class="form-label small text-muted text-uppercase fw-bold">Type</label>
                         <select name="type" class="form-select">
-                            <option value="Extruder">Extruder</option>
+                            <option value="Extruder">Extruder Line</option>
                             <option value="Buncher">Buncher</option>
-                            <option value="Coiler">Coiler</option>
+                            <option value="Coiler">Coiler / Winder</option>
                         </select>
                     </div>
-                    <hr>
-                    <h6>PLC Configuration</h6>
-                    <div class="row">
-                        <div class="col-8">
-                            <label>IP Address</label>
-                            <input type="text" name="plc_ip" class="form-control" placeholder="192.168.x.x">
-                        </div>
-                        <div class="col-4">
-                            <label>Port</label>
-                            <input type="number" name="plc_port" class="form-control" value="502">
+
+                    <div class="bg-light p-3 rounded mb-3">
+                        <h6 class="fw-bold small mb-3"><i class="fas fa-plug me-2"></i>PLC Configuration</h6>
+                        <div class="row">
+                            <div class="col-8">
+                                <label class="form-label small">IP Address</label>
+                                <input type="text" name="plc_ip" class="form-control" placeholder="192.168.1.100">
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label small">Port</label>
+                                <input type="number" name="plc_port" class="form-control" value="502">
+                            </div>
                         </div>
                     </div>
-                    <div class="mt-3 text-end">
-                        <button type="submit" class="btn btn-primary">Save Machine</button>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary py-2">Save Configuration</button>
                     </div>
                 </form>
             </div>
@@ -87,8 +119,11 @@
 
 <script>
     function editMachine(id, name, ip) {
-        // Simple edit alert for now, can be expanded to full modal
-        alert("Editing functionality for " + name + " (IP: " + ip + ") coming in v4.1!");
+        Swal.fire({
+            title: 'Edit Machine',
+            text: `Editing functionality for ${name} will be available in v4.1`,
+            icon: 'info'
+        });
     }
 </script>
 {% endblock %}

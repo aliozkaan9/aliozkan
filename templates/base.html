@@ -3,53 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cable MES Enterprise</title>
+    <title>{% block title %}Cable MES Enterprise{% endblock %}</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/modern.css') }}" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
-        .sidebar { height: 100vh; position: fixed; top: 0; left: 0; padding-top: 50px; background-color: #343a40; width: 250px; }
-        .sidebar a { padding: 15px 25px; text-decoration: none; font-size: 1.1rem; color: #d1d1d1; display: block; }
-        .sidebar a:hover { color: #f1f1f1; background-color: #495057; }
-        .content { margin-left: 250px; padding: 20px; }
-        .navbar-brand { font-weight: bold; }
+        body { font-family: 'Inter', sans-serif; }
+        .main-wrapper { display: flex; min-height: 100vh; }
+        .sidebar-wrapper { width: 260px; flex-shrink: 0; background: var(--sidebar-bg); }
+        .content-wrapper { flex-grow: 1; display: flex; flex-direction: column; background: #f4f7f6; }
+        .top-navbar { background: #fff; height: 60px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); display: flex; align-items: center; padding: 0 2rem; justify-content: space-between; }
+        .page-content { padding: 2rem; overflow-y: auto; height: calc(100vh - 60px); }
+
+        @media (max-width: 768px) {
+            .sidebar-wrapper { display: none; } /* Mobile todo */
+        }
     </style>
 </head>
 <body>
+    <div class="main-wrapper">
+        <!-- Sidebar -->
+        <nav class="sidebar-wrapper sidebar text-white">
+            <div class="brand-section d-flex align-items-center">
+                <i class="fas fa-network-wired fa-lg me-2 text-primary"></i>
+                <h5 class="mb-0 fw-bold">Cable MES <span class="text-primary">Pro</span></h5>
+            </div>
+            <div class="py-4">
+                <small class="text-muted px-4 text-uppercase fw-bold" style="font-size: 0.7rem;">Main Menu</small>
+                <div class="mt-2">
+                    <a href="/admin" class="{{ 'active' if request.endpoint == 'admin_dashboard' else '' }}">
+                        <i class="fas fa-chart-line me-2"></i> Dashboard
+                    </a>
+                    <a href="/admin/machines" class="{{ 'active' if 'machines' in request.endpoint else '' }}">
+                        <i class="fas fa-cogs me-2"></i> Machines & PLC
+                    </a>
+                    <a href="/admin/maintenance" class="{{ 'active' if 'maintenance' in request.endpoint else '' }}">
+                        <i class="fas fa-tools me-2"></i> Maintenance
+                    </a>
+                    <a href="/admin/analytics" class="{{ 'active' if 'analytics' in request.endpoint else '' }}">
+                        <i class="fas fa-chart-pie me-2"></i> Analytics (OEE)
+                    </a>
+                    <a href="/admin/reports" class="{{ 'active' if 'reports' in request.endpoint else '' }}">
+                        <i class="fas fa-file-alt me-2"></i> Reports
+                    </a>
+                    <a href="/admin/users" class="{{ 'active' if 'users' in request.endpoint else '' }}">
+                        <i class="fas fa-users me-2"></i> Users
+                    </a>
+                </div>
+            </div>
 
-    <!-- Sidebar -->
-    <div class="sidebar d-none d-md-block">
-        <h4 class="text-white text-center mb-4">🏭 Cable MES</h4>
-        <a href="/admin"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
-        <a href="/admin/machines"><i class="fas fa-industry me-2"></i> Machines & PLC</a>
-        <a href="/admin/users"><i class="fas fa-users me-2"></i> Users</a>
-        <a href="/admin/reports"><i class="fas fa-chart-bar me-2"></i> Reports</a>
-        <hr class="text-white">
-        <a href="/logout"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
-    </div>
-
-    <!-- Mobile Nav -->
-    <nav class="navbar navbar-dark bg-dark d-md-none">
-        <div class="container-fluid">
-            <span class="navbar-brand">Cable MES</span>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mobileMenu">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="content">
-        <nav class="navbar navbar-light bg-light mb-4 shadow-sm rounded">
-            <div class="container-fluid">
-                <span class="navbar-text">
-                    Welcome, <strong>{{ current_user.full_name }}</strong> ({{ current_user.role.value }})
-                </span>
+            <div class="mt-auto p-4 border-top border-secondary">
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 35px; height: 35px;">
+                        {{ current_user.username[0].upper() }}
+                    </div>
+                    <div class="ms-2">
+                        <div class="fw-bold" style="font-size: 0.9rem;">{{ current_user.full_name }}</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">{{ current_user.role.value }}</div>
+                    </div>
+                    <a href="/logout" class="ms-auto text-muted hover-white"><i class="fas fa-sign-out-alt"></i></a>
+                </div>
             </div>
         </nav>
 
-        {% block content %}{% endblock %}
+        <!-- Main Content -->
+        <div class="content-wrapper">
+            <div class="top-navbar">
+                <h5 class="mb-0 fw-normal">{% block header %}Overview{% endblock %}</h5>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-success bg-opacity-10 text-success me-3">
+                        <i class="fas fa-server me-1"></i> System Online
+                    </span>
+                    <button class="btn btn-light btn-sm rounded-circle"><i class="fas fa-bell"></i></button>
+                </div>
+            </div>
+
+            <div class="page-content">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-info alert-dismissible fade show shadow-sm border-0" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global SweetAlert mixin
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+    </script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

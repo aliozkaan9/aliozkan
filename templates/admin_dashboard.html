@@ -1,86 +1,136 @@
 {% extends "base.html" %}
 
+{% block header %}Factory Overview{% endblock %}
+
 {% block content %}
-<div class="row">
+<!-- Top Stats Row -->
+<div class="row mb-4">
     <div class="col-md-3">
-        <div class="card bg-info text-white mb-3">
-            <div class="card-body">
-                <h3>{{ machines | length }}</h3>
-                <p>Connected Machines</p>
+        <div class="card kpi-card success p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="metric-label">Production (Today)</div>
+                    <div class="metric-value text-dark mt-1">12.5 <span class="fs-6 text-muted">km</span></div>
+                </div>
+                <div class="bg-success bg-opacity-10 p-2 rounded text-success">
+                    <i class="fas fa-industry fa-lg"></i>
+                </div>
+            </div>
+            <div class="mt-3 small text-success">
+                <i class="fas fa-arrow-up"></i> 5% vs yesterday
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-success text-white mb-3">
-            <div class="card-body">
-                <h3>{{ active_wo_count }}</h3>
-                <p>Active Orders</p>
+        <div class="card kpi-card warning p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="metric-label">Overall OEE</div>
+                    <div class="metric-value text-dark mt-1">87.4 <span class="fs-6 text-muted">%</span></div>
+                </div>
+                <div class="bg-warning bg-opacity-10 p-2 rounded text-warning">
+                    <i class="fas fa-chart-pie fa-lg"></i>
+                </div>
+            </div>
+            <div class="mt-3 small text-muted">
+                Target: 85%
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-warning text-dark mb-3">
-            <div class="card-body">
-                <h3>92%</h3>
-                <p>Overall OEE</p>
+        <div class="card kpi-card danger p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="metric-label">Active Alerts</div>
+                    <div class="metric-value text-dark mt-1">2</div>
+                </div>
+                <div class="bg-danger bg-opacity-10 p-2 rounded text-danger">
+                    <i class="fas fa-exclamation-triangle fa-lg"></i>
+                </div>
+            </div>
+            <div class="mt-3 small text-danger">
+                Requires attention
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-danger text-white mb-3">
-            <div class="card-body">
-                <h3>2</h3>
-                <p>Active Alerts</p>
+        <div class="card p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="metric-label">Active Machines</div>
+                    <div class="metric-value text-dark mt-1">{{ active_wo_count }} / {{ machines|length }}</div>
+                </div>
+                <div class="bg-primary bg-opacity-10 p-2 rounded text-primary">
+                    <i class="fas fa-cogs fa-lg"></i>
+                </div>
+            </div>
+            <div class="progress mt-4" style="height: 6px;">
+                <div class="progress-bar" style="width: 75%"></div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row mt-4">
-    <div class="col-md-8">
+<!-- Main Dashboard Grid -->
+<div class="row">
+    <!-- Machine Status List -->
+    <div class="col-lg-8">
         <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Machine Status & PLC Control</h5>
+            <div class="card-header d-flex justify-content-between align-items-center bg-white">
+                <h6 class="mb-0 fw-bold">Live Machine Status</h6>
+                <button class="btn btn-sm btn-light"><i class="fas fa-sync-alt"></i></button>
             </div>
-            <div class="card-body p-0">
-                <table class="table table-striped mb-0">
-                    <thead>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="bg-light">
                         <tr>
                             <th>Machine</th>
                             <th>Status</th>
-                            <th>PLC IP</th>
-                            <th>Current Job</th>
-                            <th>Action</th>
+                            <th>Active Job</th>
+                            <th>Performance</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for m in machines %}
                         <tr>
-                            <td><strong>{{ m.name }}</strong><br><small class="text-muted">{{ m.type }}</small></td>
                             <td>
-                                {% if m.status == 'RUNNING' %}
-                                <span class="badge bg-success">RUNNING</span>
-                                {% else %}
-                                <span class="badge bg-secondary">{{ m.status }}</span>
-                                {% endif %}
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width:40px; height:40px;">
+                                        <i class="fas fa-bolt text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ m.name }}</div>
+                                        <small class="text-muted">{{ m.type }}</small>
+                                    </div>
+                                </div>
                             </td>
                             <td>
-                                {% if m.plc_ip %}
-                                <code>{{ m.plc_ip }}</code>
+                                {% if m.status == 'RUNNING' %}
+                                    <span class="badge badge-status bg-running pulse-active"><i class="fas fa-circle me-1" style="font-size:6px;"></i> Running</span>
                                 {% else %}
-                                <span class="text-muted">No PLC</span>
+                                    <span class="badge badge-status bg-idle">Idle</span>
                                 {% endif %}
                             </td>
                             <td>
                                 {% set active_wo = work_orders.get(m.id) %}
                                 {% if active_wo %}
-                                    {{ active_wo.order_number }}
+                                    <div class="fw-bold">{{ active_wo.order_number }}</div>
+                                    <small class="text-muted">{{ active_wo.product.code }}</small>
                                 {% else %}
-                                    -
+                                    <span class="text-muted">-</span>
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="#" class="btn btn-sm btn-outline-primary">Config</a>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                                        <div class="progress-bar bg-primary" style="width: 85%"></div>
+                                    </div>
+                                    <small class="fw-bold">85%</small>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="#" class="btn btn-sm btn-icon btn-light"><i class="fas fa-ellipsis-v"></i></a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -90,18 +140,48 @@
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Recent Alerts</h5>
+    <!-- Right Column: Quick Actions & Alerts -->
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">Quick Actions</h6>
             </div>
             <div class="card-body">
-                <!-- Mock Alerts -->
-                <div class="alert alert-danger py-1">
-                    <small><strong>10:45</strong> EXT-01 Diam High</small>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary text-start" data-bs-toggle="modal" data-bs-target="#newOrderModal">
+                        <i class="fas fa-plus-circle me-2"></i> Create Work Order
+                    </button>
+                    <a href="/admin/machines" class="btn btn-outline-dark text-start">
+                        <i class="fas fa-tools me-2"></i> Configure PLC
+                    </a>
+                    <a href="/admin/maintenance" class="btn btn-outline-warning text-start">
+                        <i class="fas fa-calendar-check me-2"></i> Schedule Maintenance
+                    </a>
                 </div>
-                <div class="alert alert-warning py-1">
-                    <small><strong>10:30</strong> EXT-02 Temp Low</small>
+            </div>
+        </div>
+
+        <!-- Recent Alerts -->
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold">System Alerts</h6>
+                <span class="badge bg-danger">2 New</span>
+            </div>
+            <div class="list-group list-group-flush">
+                <div class="list-group-item px-3 py-3 border-start border-4 border-danger">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1 fw-bold text-danger">Diameter Deviation</h6>
+                        <small class="text-muted">10 mins ago</small>
+                    </div>
+                    <p class="mb-1 small">EXT-01 measured 3.65mm (Target: 3.4mm). Tolerance exceeded.</p>
+                </div>
+                <div class="list-group-item px-3 py-3 border-start border-4 border-warning">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1 fw-bold text-warning">Temperature Low</h6>
+                        <small class="text-muted">25 mins ago</small>
+                    </div>
+                    <p class="mb-1 small">EXT-02 heating zone 2 is below threshold.</p>
                 </div>
             </div>
         </div>

@@ -1,50 +1,83 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Production Reports</h2>
-    <a href="{{ url_for('export_reports') }}" class="btn btn-success"><i class="fas fa-file-excel me-2"></i> Export CSV</a>
-</div>
+{% block header %}Production Reports{% endblock %}
 
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>WO Number</th>
-                        <th>Product</th>
-                        <th>Machine</th>
-                        <th>Start Time</th>
-                        <th>End Time</th>
-                        <th>Target (m)</th>
-                        <th>Produced (m)</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for wo in work_orders %}
-                    <tr>
-                        <td>{{ wo.order_number }}</td>
-                        <td>{{ wo.product.code }}</td>
-                        <td>{{ wo.machine.name }}</td>
-                        <td>{{ wo.start_time.strftime('%Y-%m-%d %H:%M') if wo.start_time else '-' }}</td>
-                        <td>{{ wo.end_time.strftime('%Y-%m-%d %H:%M') if wo.end_time else '-' }}</td>
-                        <td>{{ wo.target_length_m }}</td>
-                        <td>{{ wo.produced_length_m | round(1) }}</td>
-                        <td>
-                            {% if wo.status == 'COMPLETED' %}
-                                <span class="badge bg-success">COMPLETED</span>
-                            {% elif wo.status == 'IN_PROGRESS' %}
-                                <span class="badge bg-primary">RUNNING</span>
-                            {% else %}
-                                <span class="badge bg-secondary">{{ wo.status }}</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h6 class="mb-0 fw-bold">Work Order History</h6>
+                <div class="btn-group">
+                    <button class="btn btn-light border"><i class="fas fa-filter me-2"></i>Filter</button>
+                    <a href="{{ url_for('export_reports') }}" class="btn btn-success"><i class="fas fa-file-excel me-2"></i> Export CSV</a>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0 table-hover">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>WO Number</th>
+                            <th>Product</th>
+                            <th>Machine</th>
+                            <th>Timeline</th>
+                            <th>Performance</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for wo in work_orders %}
+                        <tr>
+                            <td>
+                                <span class="fw-bold text-dark">{{ wo.order_number }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light rounded p-1 me-2"><i class="fas fa-box text-muted"></i></div>
+                                    {{ wo.product.code }}
+                                </div>
+                            </td>
+                            <td>{{ wo.machine.name }}</td>
+                            <td>
+                                <div class="small text-muted">
+                                    <i class="fas fa-play me-1"></i> {{ wo.start_time.strftime('%H:%M') if wo.start_time else '--:--' }}<br>
+                                    <i class="fas fa-stop me-1"></i> {{ wo.end_time.strftime('%H:%M') if wo.end_time else '--:--' }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 me-2" style="height: 5px; width: 100px;">
+                                        {% set pct = (wo.produced_length_m / wo.target_length_m * 100) if wo.target_length_m > 0 else 0 %}
+                                        <div class="progress-bar {{ 'bg-success' if pct >= 100 else 'bg-primary' }}" style="width: {{ pct }}%"></div>
+                                    </div>
+                                    <small>{{ wo.produced_length_m | int }} / {{ wo.target_length_m | int }}m</small>
+                                </div>
+                            </td>
+                            <td>
+                                {% if wo.status == 'COMPLETED' %}
+                                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Completed</span>
+                                {% elif wo.status == 'IN_PROGRESS' %}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3">Running</span>
+                                {% else %}
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3">{{ wo.status }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white border-top-0 py-3">
+                <nav>
+                    <ul class="pagination justify-content-center mb-0">
+                        <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                    </ul>
+                </nav>
+            </div>
         </div>
     </div>
 </div>

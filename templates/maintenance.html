@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block header %}Maintenance Schedule{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0">Scheduled Tasks</h5>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                    <i class="fas fa-plus me-2"></i> Schedule Maintenance
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Machine</th>
+                            <th>Task Name</th>
+                            <th>Due Date</th>
+                            <th>Assigned To</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks %}
+                        <tr>
+                            <td>
+                                {% if task.status == 'COMPLETED' %}
+                                    <span class="badge bg-success bg-opacity-10 text-success">Completed</span>
+                                {% elif task.status == 'OVERDUE' %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger">Overdue</span>
+                                {% else %}
+                                    <span class="badge bg-warning bg-opacity-10 text-warning">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="fw-bold">{{ task.machine.name }}</div>
+                                <small class="text-muted">{{ task.machine.type }}</small>
+                            </td>
+                            <td>
+                                <div class="fw-bold">{{ task.task_name }}</div>
+                                <small class="text-muted">{{ task.description }}</small>
+                            </td>
+                            <td>
+                                {{ task.scheduled_date }}
+                            </td>
+                            <td>
+                                {% if task.completed_by %}
+                                    {{ task.completed_by.full_name }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if task.status != 'COMPLETED' %}
+                                <form action="{{ url_for('complete_maintenance_task', task_id=task.id) }}" method="POST" class="d-inline">
+                                    <button class="btn btn-sm btn-outline-success" onclick="return confirm('Mark as completed?')">
+                                        <i class="fas fa-check"></i> Complete
+                                    </button>
+                                </form>
+                                {% else %}
+                                    <span class="text-muted small"><i class="fas fa-check-circle"></i> Done on {{ task.completed_at.strftime('%Y-%m-%d') }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {% if not tasks %}
+                <div class="text-center py-5">
+                    <div class="mb-3 text-muted"><i class="fas fa-clipboard-check fa-3x"></i></div>
+                    <h6 class="text-muted">No maintenance tasks scheduled.</h6>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="addTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Schedule New Maintenance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('add_maintenance_task') }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Machine</label>
+                        <select name="machine_id" class="form-select" required>
+                            {% for m in machines %}
+                            <option value="{{ m.id }}">{{ m.name }} ({{ m.type }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Task Name</label>
+                        <input type="text" name="task_name" class="form-control" placeholder="e.g. Oil Change" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        <input type="date" name="scheduled_date" class="form-control" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Save Schedule</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

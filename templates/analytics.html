@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block header %}Performance Analytics{% endblock %}
+
+{% block content %}
+<div class="row">
+    {% for data in oee_data %}
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold">{{ data.machine }} - OEE Analysis</h6>
+                <span class="badge bg-primary">{{ data.oee }}%</span>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-5">
+                        <canvas id="chart-{{loop.index}}"></canvas>
+                    </div>
+                    <div class="col-md-7">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-clock text-success me-2"></i> Availability</span>
+                                <span class="fw-bold">{{ data.availability }}%</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-tachometer-alt text-warning me-2"></i> Performance</span>
+                                <span class="fw-bold">{{ data.performance }}%</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-check-circle text-info me-2"></i> Quality</span>
+                                <span class="fw-bold">{{ data.quality }}%</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card p-4">
+            <h6 class="fw-bold mb-3">Factory Trend (Last 7 Days)</h6>
+            <div style="height: 300px;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    {% for data in oee_data %}
+    new Chart(document.getElementById('chart-{{loop.index}}'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Availability', 'Performance', 'Quality', 'Loss'],
+            datasets: [{
+                data: [{{ data.availability }}, {{ data.performance }}, {{ data.quality }}, 300 - {{ data.availability }} - {{ data.performance }} - {{ data.quality }}],
+                backgroundColor: ['#2ec4b6', '#ff9f1c', '#4361ee', '#e9ecef'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            cutout: '70%',
+            plugins: { legend: { display: false } }
+        }
+    });
+    {% endfor %}
+
+    new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'OEE %',
+                data: [82, 84, 83, 85, 87, 86, 88],
+                borderColor: '#4361ee',
+                tension: 0.4,
+                fill: true,
+                backgroundColor: 'rgba(67, 97, 238, 0.1)'
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: false, min: 60, max: 100 }
+            }
+        }
+    });
+</script>
+{% endblock %}

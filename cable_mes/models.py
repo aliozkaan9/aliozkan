@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean, Enum
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean, Enum, Date
 from sqlalchemy.orm import relationship
 from cable_mes.database import Base
 from datetime import datetime
@@ -93,3 +93,17 @@ class DowntimeLog(Base):
     description = Column(String(200))
 
     machine = relationship('Machine')
+
+class MaintenanceTask(Base):
+    __tablename__ = 'maintenance_tasks'
+    id = Column(Integer, primary_key=True)
+    machine_id = Column(Integer, ForeignKey('machines.id'), nullable=False)
+    task_name = Column(String(100), nullable=False)
+    scheduled_date = Column(Date, nullable=False)
+    status = Column(String(20), default='PENDING') # PENDING, COMPLETED, OVERDUE
+    description = Column(String(200))
+    completed_at = Column(DateTime)
+    completed_by_id = Column(Integer, ForeignKey('users.id'))
+
+    machine = relationship('Machine')
+    completed_by = relationship('User')

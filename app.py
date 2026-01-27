@@ -1,7 +1,7 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from cable_mes.database import db_session
-from cable_mes.models import WorkOrder, Machine, Telemetry, QualityAlert, Product, User, UserRole
+from cable_mes.models import WorkOrder, Machine, Telemetry, QualityAlert, Product, User, UserRole, MaintenanceTask
 from cable_mes.services import MESService
 from cable_mes.plc import plc_collector # Import PLC module
 from flask_bcrypt import Bcrypt
@@ -105,6 +105,23 @@ def export_reports():
     output.headers["Content-Disposition"] = "attachment; filename=production_report.csv"
     return output
 
+@app.route('/admin/analytics')
+@login_required
+def admin_analytics():
+    machines = Machine.query.all()
+    # Calculate OEE for all machines
+    oee_data = []
+    for m in machines:
+        bd = MESService.get_oee_breakdown(m.name)
+        oee_data.append({
+            'machine': m.name,
+            'oee': bd['oee'],
+            'availability': bd['availability'],
+            'performance': bd['performance'],
+            'quality': bd['quality']
+        })
+    return render_template('analytics.html', oee_data=oee_data)
+
 @app.route('/admin/machines')
 @login_required
 def admin_machines():
@@ -135,6 +152,44 @@ def add_machine():
     db_session.add(new_machine)
     db_session.commit()
     return redirect(url_for('admin_machines'))
+
+@app.route('/admin/maintenance')
+@login_required
+def admin_maintenance():
+    tasks = MaintenanceTask.query.order_by(MaintenanceTask.scheduled_date.asc()).all()
+    machines = Machine.query.all()
+    return render_template('maintenance.html', tasks=tasks, machines=machines)
+
+@app.route('/admin/maintenance/add', methods=['POST'])
+@login_required
+def add_maintenance_task():
+    machine_id = request.form['machine_id']
+    task_name = request.form['task_name']
+    scheduled_date_str = request.form['scheduled_date']
+    description = request.form.get('description', '')
+
+    scheduled_date = datetime.datetime.strptime(scheduled_date_str, '%Y-%m-%d').date()
+
+    task = MaintenanceTask(
+        machine_id=machine_id,
+        task_name=task_name,
+        scheduled_date=scheduled_date,
+        description=description
+    )
+    db_session.add(task)
+    db_session.commit()
+    return redirect(url_for('admin_maintenance'))
+
+@app.route('/admin/maintenance/complete/<int:task_id>', methods=['POST'])
+@login_required
+def complete_maintenance_task(task_id):
+    task = MaintenanceTask.query.get(task_id)
+    if task:
+        task.status = 'COMPLETED'
+        task.completed_at = datetime.datetime.now()
+        task.completed_by_id = current_user.id
+        db_session.commit()
+    return redirect(url_for('admin_maintenance'))
 
 @app.route('/admin/users')
 @login_required
