@@ -35,6 +35,9 @@ body {
 }
 
 .sidebar a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
     color: #a0a0a0;
     padding: 15px 25px;
     border-left: 4px solid transparent;
