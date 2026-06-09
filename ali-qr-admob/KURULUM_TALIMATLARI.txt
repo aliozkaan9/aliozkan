@@ -1,0 +1,72 @@
+╔══════════════════════════════════════════════════════════╗
+║          ALİ QR - AdMob Kurulum Talimatları             ║
+╚══════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ADIM 1 — Google AdMob Hesabı Aç
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. admob.google.com adresine git (Google hesabınla giriş)
+2. "Başlayın" veya "Get Started" butonuna tıkla
+3. Ülke: Türkiye, Para birimi: TRY seç
+4. Şartları kabul et
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ADIM 2 — Uygulama Oluştur
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Sol menüden "Uygulamalar" > "Uygulama ekle" tıkla
+2. Platform: Android seç
+3. "Uygulamanız yayında mı?": HAYIR seç (henüz Play Store'da değil)
+4. Uygulama adı: Ali QR
+5. "Ekle" butonuna bas
+
+→ APP ID alacaksın. Format: ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
+  Bu ID'yi kopyala!
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ADIM 3 — Geçiş Reklamı (Interstitial) Birimi Oluştur
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Oluşturduğun uygulamaya tıkla
+2. "Reklam birimleri" > "Reklam birimi ekle"
+3. "Geçiş Reklamı" (Interstitial) seç
+4. Ad: "QR Sonrasi Reklam" yaz
+5. Oluştur
+
+→ AD UNIT ID alacaksın. Format: ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
+  Bu ID'yi de kopyala!
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ADIM 4 — Kodlara ID'leri Gir
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+app/src/main/AndroidManifest.xml dosyasını aç:
+  "ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY" yazan yeri
+  kendi APP ID'nle değiştir
+
+app/src/main/java/com/aliqr/AdManager.java dosyasını aç:
+  "ca-app-pub-3940256099942544/1033173712" yazan yeri
+  kendi AD UNIT ID'nle değiştir
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ADIM 5 — Android Studio ile Derle
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Android Studio'yu indir: developer.android.com/studio
+2. "Open Project" > bu klasörü seç (ali-qr-admob)
+3. Gradle sync tamamlanana bekle
+4. Build > Generate Signed APK > seçenekleri doldur
+5. APK hazır!
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NOT — Para ne zaman gelir?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Reklamlar her QR okuma sonrasında çıkar
+• AdMob, her 1000 reklam için 0.5 - 3 USD öder
+• Ödeme: Google Pay veya banka havalesi
+• Minimum çekim: 70 USD (yaklaşık 2300 TL)
+• İlk ödeme genellikle 2. ayın sonunda gelir
+
+İpucu: Uygulamayı Play Store'a yüklerseniz daha fazla kullanıcıya ulaşırsınız!

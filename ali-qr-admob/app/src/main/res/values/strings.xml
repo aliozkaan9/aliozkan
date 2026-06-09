@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ali QR</string>
+    <string name="camera_permission_required">Kamera izni gerekli</string>
+    <string name="camera_permission_message">QR kod okumak için kamera iznine ihtiyaç var.</string>
+    <string name="permission_denied">Kamera izni reddedildi</string>
+    <string name="grant_permission">İzin Ver</string>
+    <string name="scanning">Taranıyor...</string>
+    <string name="qr_detected">QR Kod Algılandı!</string>
+    <string name="copied">Panoya kopyalandı</string>
+</resources>
