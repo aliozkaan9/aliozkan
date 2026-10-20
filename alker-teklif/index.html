@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alker Yazılım Teklif Formu</title>
+<meta name="description" content="Alker Yazılım proje teklif talep formu">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..800&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: logo bandı, kısa başlık; geniş ekranda form + yapışkan canlı özet, telefonda tek sütun */
+:root {
+  --paper: #f3f4f2;
+  --surface: #ffffff;
+  --ink: #141515;
+  --muted: #60646a;
+  --line: #d8dad6;
+  --accent: #141515;
+  --accent-ink: #ffffff;
+  --soft: #e9eae7;
+  --danger: #b42318;
+  --ok: #1d7a4b;
+
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #101111; --surface: #191a1b; --ink: #efefec; --muted: #9b9fa3;
+    --line: #2d2f31; --accent: #efefec; --accent-ink: #101111; --soft: #222426;
+    --danger: #ff8a7a; --ok: #63d39b; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #101111; --surface: #191a1b; --ink: #efefec; --muted: #9b9fa3;
+  --line: #2d2f31; --accent: #efefec; --accent-ink: #101111; --soft: #222426;
+  --danger: #ff8a7a; --ok: #63d39b; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 400 15px/1.55 var(--f-body);
+  -webkit-font-smoothing: antialiased;
+}
+.wrap {
+  max-width: 1120px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Üst bant */
+.top { border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 18px; }
+.brand { display: flex; align-items: center; gap: 12px; color: var(--ink); text-decoration: none; }
+.brand svg { width: 34px; height: 36px; flex: none; }
+.brand b { font: 800 20px/1 var(--f-display); font-stretch: 112%; letter-spacing: .06em; }
+.brand span { display: block; font: 500 11px/1 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-top: 5px; }
+.tag { font: 500 12px/1 var(--f-mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+
+/* Başlık */
+.hero .wrap { padding-block: 48px 32px; display: grid; gap: 14px; }
+.hero h1 {
+  margin: 0; font: 700 clamp(30px, 5vw, 50px)/1.05 var(--f-display); font-stretch: 108%;
+  letter-spacing: -.02em; text-wrap: balance; max-width: 18ch;
+}
+.hero p { margin: 0; max-width: 58ch; color: var(--muted); font-size: 16px; }
+
+/* Ana ızgara */
+.main .wrap { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 32px; align-items: start; padding-block: 8px 72px; }
+@media (max-width: 900px) { .main .wrap { grid-template-columns: minmax(0, 1fr); } }
+
+form, .done { display: grid; gap: 20px; min-width: 0; }
+fieldset {
+  margin: 0; border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--surface); padding: 24px; display: grid; gap: 18px; min-width: 0;
+}
+legend { padding: 0; float: left; width: 100%; display: flex; align-items: baseline; gap: 12px; }
+legend + * { clear: both; }
+legend .no { font: 500 12px/1 var(--f-mono); color: var(--muted); letter-spacing: .06em; }
+legend .t { font: 700 19px/1.2 var(--f-display); font-stretch: 105%; }
+
+.row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 560px) { .row { grid-template-columns: minmax(0, 1fr); } fieldset { padding: 18px; } }
+
+.field { display: grid; gap: 6px; min-width: 0; }
+.field > label, .group-label { font-weight: 600; font-size: 14px; }
+.req { color: var(--muted); font-weight: 400; }
+.hint { color: var(--muted); font-size: 13px; }
+input[type="text"], input[type="email"], input[type="tel"], input[type="date"], input[type="url"], select, textarea {
+  width: 100%; font: inherit; color: var(--ink); background: var(--paper);
+  border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px;
+  transition: border-color .15s, box-shadow .15s;
+}
+textarea { min-height: 132px; resize: vertical; }
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: none; border-color: var(--ink); box-shadow: 0 0 0 3px var(--soft);
+}
+.err { color: var(--danger); font-size: 13px; }
+.invalid input, .invalid textarea, .invalid select { border-color: var(--danger); }
+.invalid .chips { outline: 1px dashed var(--danger); outline-offset: 6px; border-radius: 6px; }
+
+/* Seçim çipleri */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { position: relative; }
+.chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.chip span {
+  display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--paper);
+  font-size: 14px; cursor: pointer; user-select: none; transition: background .15s, color .15s, border-color .15s;
+}
+.chip span::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--muted); flex: none;
+}
+.chip input[type="radio"] + span::before { border-radius: 50%; }
+.chip input:hover + span { border-color: var(--ink); }
+.chip input:checked + span { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.chip input:checked + span::before { background: var(--accent-ink); border-color: var(--accent-ink); }
+.chip input:focus-visible + span { box-shadow: 0 0 0 3px var(--soft), 0 0 0 4px var(--ink); }
+
+/* Hizmet kartları */
+.services { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.svc { position: relative; }
+.svc input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.svc div {
+  height: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px;
+  background: var(--paper); cursor: pointer; display: grid; gap: 2px; transition: border-color .15s, background .15s;
+}
+.svc strong { font-weight: 600; font-size: 14px; }
+.svc small { color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+.svc input:hover + div { border-color: var(--ink); }
+.svc input:checked + div { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); background: var(--surface); }
+.svc input:checked + div strong::after { content: " ✓"; }
+.svc input:focus-visible + div { box-shadow: 0 0 0 3px var(--soft), inset 0 0 0 1px var(--ink); }
+
+.consent { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
+.consent input { margin-top: 4px; width: 16px; height: 16px; accent-color: var(--ink); flex: none; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn {
+  appearance: none; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+  font: 600 15px/1 var(--f-body); padding: 14px 22px; border-radius: 8px; cursor: pointer;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+}
+.btn:hover { opacity: .88; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn.ghost:hover { border-color: var(--ink); opacity: 1; }
+.btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.save-note { color: var(--muted); font-size: 13px; }
+
+/* Canlı özet */
+aside {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 20px);
+  border: 1px solid var(--line); border-radius: var(--r); background: var(--surface);
+  padding: 22px; display: grid; gap: 16px; min-width: 0;
+}
+@media (max-width: 900px) { aside { position: static; } }
+aside h2 { margin: 0; font: 700 16px/1.2 var(--f-display); font-stretch: 105%; }
+.meter { display: grid; gap: 6px; }
+.meter-bar { height: 4px; background: var(--soft); border-radius: 2px; overflow: hidden; }
+.meter-bar i { display: block; height: 100%; width: 0; background: var(--ink); transition: width .25s; }
+.meter small { font: 500 12px/1 var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+dl { margin: 0; display: grid; gap: 12px; }
+dl div { display: grid; gap: 3px; }
+dt { font: 500 11px/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+dd { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
+dd.empty { color: var(--muted); }
+.steps { border-top: 1px solid var(--line); padding-top: 16px; margin: 0; padding-left: 0; list-style: none; display: grid; gap: 10px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 22px 1fr; gap: 8px; font-size: 13.5px; color: var(--muted); }
+.steps li::before { content: counter(s); font: 500 12px/1.6 var(--f-mono); color: var(--ink); }
+
+/* Gönderim sonrası */
+.done .card { border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); padding: 28px; display: grid; gap: 16px; }
+.done h2 { margin: 0; font: 700 26px/1.15 var(--f-display); font-stretch: 106%; text-wrap: balance; }
+.ref { font: 500 13px/1 var(--f-mono); letter-spacing: .06em; color: var(--muted); }
+.ref b { color: var(--ink); font-weight: 500; }
+.done p { margin: 0; color: var(--muted); max-width: 60ch; }
+pre.summary {
+  margin: 0; padding: 16px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
+  font: 500 12.5px/1.6 var(--f-mono); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 360px; overflow: auto;
+}
+.contact { font-size: 14px; }
+.contact code { font-family: var(--f-mono); user-select: all; }
+.toast { color: var(--ok); font-size: 13px; min-height: 1.2em; }
+
+footer { border-top: 1px solid var(--line); }
+footer .wrap { padding-block: 20px; color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#" aria-label="Alker Yazılım">
+      <svg viewBox="0 0 100 106" aria-hidden="true">
+        <g fill="currentColor" stroke="currentColor" stroke-width="4" stroke-linejoin="round">
+          <path d="M50 6 L5 99 L40 87 Q45 60 66.5 39 Z"/>
+          <path d="M69.5 45 Q58 60 57.5 74 Q57.5 84 65 91 L96 100 Z"/>
+        </g>
+      </svg>
+      <div><b>ALKER</b><span>Yazılım</span></div>
+    </a>
+    <div class="tag">Teklif talebi</div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <h1>Projenizi anlatın, teklifinizi hazırlayalım.</h1>
+    <p>Web sitesi, mobil uygulama veya kurumsal yazılım: ihtiyacınızı birkaç dakikada paylaşın. Ekibimiz talebinizi inceleyip kapsam, süre ve fiyatı içeren bir teklifle size dönsün.</p>
+  </div>
+</section>
+
+<section class="main">
+  <div class="wrap">
+    <form id="quote" novalidate>
+      <fieldset>
+        <legend><span class="no">1 / 5</span><span class="t">İletişim bilgileri</span></legend>
+        <div class="row">
+          <div class="field" data-f="name">
+            <label for="name">Ad Soyad <span class="req">*</span></label>
+            <input id="name" name="name" type="text" autocomplete="name" required>
+          </div>
+          <div class="field" data-f="company">
+            <label for="company">Firma</label>
+            <input id="company" name="company" type="text" autocomplete="organization">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field" data-f="email">
+            <label for="email">E-posta <span class="req">*</span></label>
+            <input id="email" name="email" type="email" autocomplete="email" inputmode="email" required>
+          </div>
+          <div class="field" data-f="phone">
+            <label for="phone">Telefon <span class="req">*</span></label>
+            <input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="05xx xxx xx xx" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field" data-f="city">
+            <label for="city">Şehir</label>
+            <input id="city" name="city" type="text" autocomplete="address-level2">
+          </div>
+          <div class="field" data-f="contactPref">
+            <label for="contactPref">Size nasıl ulaşalım?</label>
+            <select id="contactPref" name="contactPref">
+              <option>Telefon</option>
+              <option>E-posta</option>
+              <option>WhatsApp</option>
+              <option>Yüz yüze görüşme</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span class="no">2 / 5</span><span class="t">Hangi hizmete ihtiyacınız var?</span></legend>
+        <div class="field" data-f="services">
+          <span class="group-label">Birden fazla seçebilirsiniz <span class="req">*</span></span>
+          <div class="services">
+            <label class="svc"><input type="checkbox" name="services" value="Kurumsal web sitesi"><div><strong>Kurumsal web sitesi</strong><small>Tanıtım sitesi, blog, içerik yönetimi</small></div></label>
+            <label class="svc"><input type="checkbox" name="services" value="E-ticaret"><div><strong>E-ticaret</strong><small>Mağaza, sanal POS, kargo entegrasyonu</small></div></label>
+            <label class="svc"><input type="checkbox" name="services" value="Mobil uygulama"><div><strong>Mobil uygulama</strong><small>iOS ve Android, mağaza yayını</small></div></label>
+            <label class="svc"><input type="checkbox" name="services" value="Web uygulaması / SaaS"><div><strong>Web uygulaması / SaaS</strong><small>Panel, portal, abonelikli ürün</small></div></label>
+            <label class="svc"><input type="checkbox" name="services" value="Kurumsal yazılım / ERP"><div><strong>Kurumsal yazılım / ERP</strong><small>Stok, üretim, CRM, iş akışları</small></div></label>
+            <label class="svc"><input type="checkbox" name="services" value="Entegrasyon / API"><div><strong>Entegrasyon / API</strong><small>e-Fatura, muhasebe, pazaryeri</small></div></label>
+            <label class="svc"><input type="checkbox" name="services" value="UI/UX tasarım"><div><strong>UI/UX tasarım</strong><small>Arayüz, prototip, kullanıcı akışı</small></div></label>
+            <label class="svc"><input type="checkbox" name="services" value="Bakım ve destek"><div><strong>Bakım ve destek</strong><small>Mevcut sistemin geliştirilmesi</small></div></label>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span class="no">3 / 5</span><span class="t">Proje detayları</span></legend>
+        <div class="field" data-f="projectName">
+          <label for="projectName">Proje adı</label>
+          <input id="projectName" name="projectName" type="text" placeholder="Örn. Bayi sipariş portalı">
+        </div>
+        <div class="field" data-f="description">
+          <label for="description">Projenizi kısaca anlatın <span class="req">*</span></label>
+          <textarea id="description" name="description" required placeholder="Ne yapmak istiyorsunuz, kimler kullanacak, hangi sorunu çözecek?"></textarea>
+          <span class="hint" id="descCount">En az 20 karakter</span>
+        </div>
+        <div class="field" data-f="platforms">
+          <span class="group-label">Platformlar</span>
+          <div class="chips">
+            <label class="chip"><input type="checkbox" name="platforms" value="Web"><span>Web</span></label>
+            <label class="chip"><input type="checkbox" name="platforms" value="iOS"><span>iOS</span></label>
+            <label class="chip"><input type="checkbox" name="platforms" value="Android"><span>Android</span></label>
+            <label class="chip"><input type="checkbox" name="platforms" value="Masaüstü"><span>Masaüstü</span></label>
+            <label class="chip"><input type="checkbox" name="platforms" value="Henüz bilmiyorum"><span>Henüz bilmiyorum</span></label>
+          </div>
+        </div>
+        <div class="field" data-f="features">
+          <span class="group-label">İstediğiniz özellikler</span>
+          <div class="chips">
+            <label class="chip"><input type="checkbox" name="features" value="Üyelik / giriş"><span>Üyelik / giriş</span></label>
+            <label class="chip"><input type="checkbox" name="features" value="Yönetim paneli"><span>Yönetim paneli</span></label>
+            <label class="chip"><input type="checkbox" name="features" value="Online ödeme"><span>Online ödeme</span></label>
+            <label class="chip"><input type="checkbox" name="features" value="Raporlama"><span>Raporlama</span></label>
+            <label class="chip"><input type="checkbox" name="features" value="Bildirimler"><span>Bildirimler</span></label>
+            <label class="chip"><input type="checkbox" name="features" value="Çoklu dil"><span>Çoklu dil</span></label>
+            <label class="chip"><input type="checkbox" name="features" value="Harita / konum"><span>Harita / konum</span></label>
+            <label class="chip"><input type="checkbox" name="features" value="e-Fatura entegrasyonu"><span>e-Fatura entegrasyonu</span></label>
+            <label class="chip"><input type="checkbox" name="features" value="Yapay zekâ"><span>Yapay zekâ</span></label>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field" data-f="existing">
+            <label for="existing">Mevcut bir sisteminiz var mı?</label>
+            <select id="existing" name="existing">
+              <option>Yok, sıfırdan başlıyoruz</option>
+              <option>Var, yenilenecek</option>
+              <option>Var, üzerine geliştirilecek</option>
+            </select>
+          </div>
+          <div class="field" data-f="reference">
+            <label for="reference">Beğendiğiniz örnek site / uygulama</label>
+            <input id="reference" name="reference" type="text" placeholder="Bağlantı veya isim">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span class="no">4 / 5</span><span class="t">Bütçe ve takvim</span></legend>
+        <div class="field" data-f="budget">
+          <span class="group-label">Tahmini bütçe (KDV hariç) <span class="req">*</span></span>
+          <div class="chips">
+            <label class="chip"><input type="radio" name="budget" value="50.000 ₺ altı"><span>50.000 ₺ altı</span></label>
+            <label class="chip"><input type="radio" name="budget" value="50.000 – 150.000 ₺"><span>50.000 – 150.000 ₺</span></label>
+            <label class="chip"><input type="radio" name="budget" value="150.000 – 500.000 ₺"><span>150.000 – 500.000 ₺</span></label>
+            <label class="chip"><input type="radio" name="budget" value="500.000 ₺ üzeri"><span>500.000 ₺ üzeri</span></label>
+            <label class="chip"><input type="radio" name="budget" value="Henüz belirlenmedi"><span>Henüz belirlenmedi</span></label>
+          </div>
+        </div>
+        <div class="field" data-f="timeline">
+          <span class="group-label">Ne zaman yayında olmalı? <span class="req">*</span></span>
+          <div class="chips">
+            <label class="chip"><input type="radio" name="timeline" value="1 ay içinde"><span>1 ay içinde</span></label>
+            <label class="chip"><input type="radio" name="timeline" value="1–3 ay"><span>1–3 ay</span></label>
+            <label class="chip"><input type="radio" name="timeline" value="3–6 ay"><span>3–6 ay</span></label>
+            <label class="chip"><input type="radio" name="timeline" value="6 ay+"><span>6 ay+</span></label>
+            <label class="chip"><input type="radio" name="timeline" value="Esnek"><span>Esnek</span></label>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field" data-f="startDate">
+            <label for="startDate">Tercih ettiğiniz başlangıç tarihi</label>
+            <input id="startDate" name="startDate" type="date">
+          </div>
+          <div class="field" data-f="source">
+            <label for="source">Bizi nereden duydunuz?</label>
+            <select id="source" name="source">
+              <option value="">Seçiniz</option>
+              <option>Google</option>
+              <option>Instagram</option>
+              <option>LinkedIn</option>
+              <option>Tavsiye</option>
+              <option>Daha önce çalıştık</option>
+              <option>Diğer</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span class="no">5 / 5</span><span class="t">Son adım</span></legend>
+        <div class="field" data-f="notes">
+          <label for="notes">Eklemek istedikleriniz</label>
+          <textarea id="notes" name="notes" style="min-height:90px" placeholder="Doküman bağlantısı, özel istekler, görüşme için uygun saatler…"></textarea>
+        </div>
+        <div class="field" data-f="kvkk">
+          <label class="consent"><input id="kvkk" name="kvkk" type="checkbox" required>
+            <span>Paylaştığım bilgilerin teklif hazırlanması ve benimle iletişim kurulması amacıyla 6698 sayılı KVKK kapsamında işlenmesini kabul ediyorum. <span class="req">*</span></span>
+          </label>
+        </div>
+        <div class="actions">
+          <button class="btn" type="submit" id="submitBtn">Teklif talebini oluştur →</button>
+          <button class="btn ghost" type="button" id="resetBtn">Formu temizle</button>
+          <span class="save-note" id="saveNote"></span>
+        </div>
+      </fieldset>
+    </form>
+
+    <section class="done" id="done" hidden aria-live="polite">
+      <div class="card">
+        <div class="ref">Talep no: <b id="refNo"></b></div>
+        <h2 id="doneTitle">Teşekkürler, talebiniz hazır.</h2>
+        <p id="doneText"></p>
+        <pre class="summary" id="summary"></pre>
+        <div class="actions" id="sendActions">
+          <a class="btn" id="mailBtn" hidden>E-posta ile gönder</a>
+          <a class="btn" id="waBtn" target="_blank" rel="noopener" hidden>WhatsApp ile gönder</a>
+          <button class="btn ghost" type="button" id="copyBtn">Metni kopyala</button>
+          <button class="btn ghost" type="button" id="editBtn">Düzenle</button>
+        </div>
+        <div class="contact" id="contactLine" hidden></div>
+        <div class="toast" id="toast" role="status"></div>
+      </div>
+    </section>
+
+    <aside aria-label="Talep özeti">
+      <h2>Talep özeti</h2>
+      <div class="meter">
+        <div class="meter-bar"><i id="meterBar"></i></div>
+        <small id="meterText">Zorunlu alanlar: 0 / 8</small>
+      </div>
+      <dl>
+        <div><dt>Firma</dt><dd id="sCompany" class="empty">—</dd></div>
+        <div><dt>Hizmetler</dt><dd id="sServices" class="empty">Henüz seçilmedi</dd></div>
+        <div><dt>Platform</dt><dd id="sPlatforms" class="empty">—</dd></div>
+        <div><dt>Bütçe</dt><dd id="sBudget" class="empty">—</dd></div>
+        <div><dt>Takvim</dt><dd id="sTimeline" class="empty">—</dd></div>
+      </dl>
+      <ol class="steps">
+        <li>Formu doldurup talebinizi bize iletin.</li>
+        <li>Ekibimiz ihtiyacınızı inceler, gerekirse sizi arar.</li>
+        <li>Ücretsiz keşif görüşmesinde kapsamı netleştiririz.</li>
+        <li>Kapsam, süre ve fiyatı içeren yazılı teklifi alırsınız.</li>
+      </ol>
+    </aside>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© <span id="year">2026</span> Alker Yazılım</span>
+    <span>Bilgileriniz yalnızca teklif sürecinde kullanılır.</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  // Talebin iletileceği adresler. Boş bırakılan kanal için buton gösterilmez.
+  var CONFIG = {
+    email: "",      // örn. "teklif@alkeryazilim.com"
+    whatsapp: ""    // ülke koduyla, boşluksuz: örn. "905xxxxxxxxx"
+  };
+
+  var form = document.getElementById("quote");
+  var done = document.getElementById("done");
+  var DRAFT_KEY = "alker-teklif-taslak";
+  var REQUIRED = ["name", "email", "phone", "services", "description", "budget", "timeline", "kvkk"];
+
+  var $ = function (id) { return document.getElementById(id); };
+  $("year").textContent = new Date().getFullYear();
+
+  function values() {
+    var fd = new FormData(form);
+    var v = {};
+    ["name","company","email","phone","city","contactPref","projectName","description","existing","reference","budget","timeline","startDate","source","notes"].forEach(function (k) {
+      v[k] = (fd.get(k) || "").toString().trim();
+    });
+    v.services = fd.getAll("services");
+    v.platforms = fd.getAll("platforms");
+    v.features = fd.getAll("features");
+    v.kvkk = $("kvkk").checked;
+    return v;
+  }
+
+  function errorFor(k, v) {
+    switch (k) {
+      case "name": return v.name.length < 3 ? "Adınızı ve soyadınızı yazın." : "";
+      case "email": return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.email) ? "" : "Geçerli bir e-posta adresi yazın (ör. ad@firma.com).";
+      case "phone": return v.phone.replace(/\D/g, "").length >= 10 ? "" : "Telefon numaranızı alan koduyla birlikte yazın.";
+      case "services": return v.services.length ? "" : "En az bir hizmet seçin.";
+      case "description": return v.description.length >= 20 ? "" : "Projenizi en az 20 karakterle anlatın.";
+      case "budget": return v.budget ? "" : "Bütçe aralığı seçin. Emin değilseniz “Henüz belirlenmedi” seçebilirsiniz.";
+      case "timeline": return v.timeline ? "" : "Bir takvim seçin.";
+      case "kvkk": return v.kvkk ? "" : "Devam etmek için KVKK onayı gerekiyor.";
+    }
+    return "";
+  }
+
+  function setError(k, msg) {
+    var box = form.querySelector('[data-f="' + k + '"]');
+    if (!box) return;
+    var el = box.querySelector(".err");
+    box.classList.toggle("invalid", !!msg);
+    if (msg) {
+      if (!el) { el = document.createElement("span"); el.className = "err"; el.id = "err-" + k; box.appendChild(el); }
+      el.textContent = msg;
+    } else if (el) { el.remove(); }
+  }
+
+  function fill(id, list, emptyText) {
+    var dd = $(id);
+    var text = Array.isArray(list) ? list.join(", ") : list;
+    dd.textContent = text || emptyText;
+    dd.classList.toggle("empty", !text);
+  }
+
+  function refresh() {
+    var v = values();
+    var ok = REQUIRED.filter(function (k) { return !errorFor(k, v); }).length;
+    $("meterBar").style.width = (ok / REQUIRED.length * 100) + "%";
+    $("meterText").textContent = "Zorunlu alanlar: " + ok + " / " + REQUIRED.length;
+    fill("sCompany", v.company || v.name, "—");
+    fill("sServices", v.services, "Henüz seçilmedi");
+    fill("sPlatforms", v.platforms, "—");
+    fill("sBudget", v.budget, "—");
+    fill("sTimeline", v.timeline, "—");
+    var n = v.description.length;
+    $("descCount").textContent = n < 20 ? "En az 20 karakter (" + n + ")" : n + " karakter";
+    // Hatalı alan düzeltildikçe uyarıyı kaldır
+    REQUIRED.forEach(function (k) {
+      var box = form.querySelector('[data-f="' + k + '"]');
+      if (box && box.classList.contains("invalid") && !errorFor(k, v)) setError(k, "");
+    });
+  }
+
+  // Taslak: yalnızca bu tarayıcıda saklanır
+  function saveDraft() {
+    try {
+      var v = values(); delete v.kvkk;
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(v));
+      $("saveNote").textContent = "Taslak bu cihazda kaydedildi.";
+    } catch (e) {}
+  }
+  function loadDraft() {
+    var v;
+    try { v = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch (e) { v = null; }
+    if (!v) return;
+    Object.keys(v).forEach(function (k) {
+      var val = v[k];
+      if (Array.isArray(val)) {
+        form.querySelectorAll('input[name="' + k + '"]').forEach(function (i) { i.checked = val.indexOf(i.value) > -1; });
+      } else {
+        var radios = form.querySelectorAll('input[type="radio"][name="' + k + '"]');
+        if (radios.length) radios.forEach(function (i) { i.checked = i.value === val; });
+        else if (form.elements[k] && val) form.elements[k].value = val;
+      }
+    });
+  }
+  function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} }
+
+  function refNo() {
+    var d = new Date();
+    var p = function (n) { return String(n).padStart(2, "0"); };
+    var r = Math.floor(Math.random() * 9000 + 1000);
+    return "ALK-" + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + "-" + r;
+  }
+
+  function fmtDate(s) {
+    if (!s) return "";
+    var a = s.split("-");
+    return a.length === 3 ? a[2] + "." + a[1] + "." + a[0] : s;
+  }
+
+  function buildSummary(v, ref) {
+    var L = [];
+    var line = function (label, val) { if (val && (!Array.isArray(val) || val.length)) L.push(label + ": " + (Array.isArray(val) ? val.join(", ") : val)); };
+    L.push("ALKER YAZILIM · TEKLİF TALEBİ");
+    L.push("Talep no: " + ref);
+    L.push("Tarih: " + new Date().toLocaleDateString("tr-TR"));
+    L.push("");
+    L.push("— İLETİŞİM —");
+    line("Ad Soyad", v.name); line("Firma", v.company); line("E-posta", v.email);
+    line("Telefon", v.phone); line("Şehir", v.city); line("Tercih edilen iletişim", v.contactPref);
+    L.push("");
+    L.push("— PROJE —");
+    line("Hizmetler", v.services); line("Proje adı", v.projectName);
+    line("Platformlar", v.platforms); line("Özellikler", v.features);
+    line("Mevcut sistem", v.existing); line("Örnek", v.reference);
+    L.push("Açıklama:"); L.push(v.description);
+    L.push("");
+    L.push("— BÜTÇE VE TAKVİM —");
+    line("Bütçe", v.budget); line("Takvim", v.timeline);
+    line("Başlangıç", fmtDate(v.startDate)); line("Kaynak", v.source);
+    if (v.notes) { L.push(""); L.push("— NOTLAR —"); L.push(v.notes); }
+    return L.join("\n");
+  }
+
+  form.addEventListener("input", function () { refresh(); saveDraft(); });
+  form.addEventListener("change", function () { refresh(); saveDraft(); });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var v = values();
+    var first = null;
+    REQUIRED.forEach(function (k) {
+      var msg = errorFor(k, v);
+      setError(k, msg);
+      if (msg && !first) first = k;
+    });
+    if (first) {
+      var box = form.querySelector('[data-f="' + first + '"]');
+      var focusEl = box.querySelector("input, textarea, select");
+      box.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (focusEl) focusEl.focus({ preventScroll: true });
+      return;
+    }
+    var ref = refNo();
+    var text = buildSummary(v, ref);
+    var subject = "Teklif talebi " + ref + " · " + (v.company || v.name);
+    $("refNo").textContent = ref;
+    $("summary").textContent = text;
+
+    var channels = [];
+    if (CONFIG.email) {
+      $("mailBtn").href = "mailto:" + CONFIG.email + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(text);
+      $("mailBtn").hidden = false; channels.push("e-posta");
+    }
+    if (CONFIG.whatsapp) {
+      $("waBtn").href = "https://wa.me/" + CONFIG.whatsapp + "?text=" + encodeURIComponent(text);
+      $("waBtn").hidden = false; channels.push("WhatsApp");
+    }
+    if (channels.length) {
+      $("doneTitle").textContent = "Talebiniz hazır. Son adım: bize gönderin.";
+      $("doneText").textContent = "Aşağıdaki butonla talebiniz " + channels.join(" veya ") + " üzerinden hazır metin olarak açılır; göndermeniz yeterli. Uygulama açılmazsa metni kopyalayıp doğrudan iletebilirsiniz.";
+      var parts = [];
+      if (CONFIG.email) parts.push("E-posta: <code></code>");
+      if (CONFIG.whatsapp) parts.push("WhatsApp: <code></code>");
+      $("contactLine").innerHTML = parts.join(" · ");
+      var codes = $("contactLine").querySelectorAll("code"), i = 0;
+      if (CONFIG.email) codes[i++].textContent = CONFIG.email;
+      if (CONFIG.whatsapp) codes[i++].textContent = "+" + CONFIG.whatsapp;
+      $("contactLine").hidden = false;
+    } else {
+      $("doneTitle").textContent = "Talebiniz hazır.";
+      $("doneText").textContent = "Talep metnini kopyalayıp size ilettiğimiz e-posta adresine veya WhatsApp hattına gönderebilirsiniz.";
+    }
+    form.hidden = true;
+    done.hidden = false;
+    done.scrollIntoView({ behavior: "smooth", block: "start" });
+    clearDraft();
+  });
+
+  $("copyBtn").addEventListener("click", function () {
+    var text = $("summary").textContent;
+    var fallback = function () {
+      var r = document.createRange(); r.selectNodeContents($("summary"));
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      $("toast").textContent = "Metin seçildi. Kopyalamak için Ctrl+C (veya ⌘+C) kullanın.";
+    };
+    try {
+      navigator.clipboard.writeText(text).then(function () {
+        $("toast").textContent = "Talep metni kopyalandı.";
+      }, fallback);
+    } catch (e) { fallback(); }
+  });
+
+  $("editBtn").addEventListener("click", function () {
+    done.hidden = true; form.hidden = false; $("toast").textContent = "";
+    saveDraft();
+    form.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  var resetArmed = false;
+  $("resetBtn").addEventListener("click", function () {
+    if (!resetArmed) {
+      resetArmed = true;
+      $("resetBtn").textContent = "Emin misiniz? Tekrar basın";
+      setTimeout(function () { resetArmed = false; $("resetBtn").textContent = "Formu temizle"; }, 3000);
+      return;
+    }
+    resetArmed = false;
+    form.reset(); clearDraft();
+    REQUIRED.forEach(function (k) { setError(k, ""); });
+    $("resetBtn").textContent = "Formu temizle";
+    $("saveNote").textContent = "Form temizlendi.";
+    refresh();
+  });
+
+  loadDraft();
+  refresh();
+})();
+</script>
+</body>
+</html>
